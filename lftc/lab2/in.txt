@@ -1,0 +1,19 @@
+#include <iostream>
+using namespace std;
+
+struct Circle {
+    double radius;
+};
+
+int main() {
+    Circle c@;
+    double area;
+    const double pi$ = 3.14;
+
+    cout << "Enter the radius:";
+    cin >> c.radius;
+
+    area = pi * c.radius * c.radius;
+    cout << "The circle's area is: " << area;
+
+}

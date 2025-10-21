@@ -1,7 +1,7 @@
 #include <iostream>
 
 using namespace std;
-// The CMMDC of two integers
+
 int main() {
     int a; 
     int b;

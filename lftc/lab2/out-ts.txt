@@ -1,0 +1,11 @@
+=== TABELA DE SIMBOLURI (TS) ===
+INDEX     SIMBOL
+------------------------------
+7         14
+6         3
+0         Circle
+3         area
+2         c
+4         const
+5         pi
+1         radius

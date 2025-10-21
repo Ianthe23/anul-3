@@ -5,7 +5,7 @@ using namespace std;
 struct Circle {
     float radius;
 } circle;
-// The perimeter and the area of a circle with a given radius
+
 int main() {
     float pi = 3.14;
     cout << "Enter the radius of the circle: ";

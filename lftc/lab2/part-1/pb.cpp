@@ -37,7 +37,7 @@ struct Lexer {
     }
 
     void addErr(string msg, int ln, int col) {
-        errors.push_back("Lexical error at (line " + to_string(ln) + ", col " + to_string(col) + "): " + msg); 
+        errors.push_back("Eroare lexicala la linia " + to_string(ln) + ", coloana " + to_string(col) + ": " + msg); 
     }
 
     static bool isLetter(char c) {
@@ -64,7 +64,7 @@ struct Lexer {
                     if (s[j] == '"'){ closed = true; ++j; break; } ++j; 
                 }
                 string lex = s.substr(i, j-i);
-                if (!closed) addErr("Unterminated string literal", ln, col);
+                if (!closed) addErr("Literal de string neinchis", ln, col);
                 addTok("STRING", lex, ln, col);
                 i = j; continue;
             }
@@ -108,7 +108,7 @@ struct Lexer {
                 i = j; continue;
             }
 
-            addErr(string("Unknown character '") + c + "'", ln, col);
+            addErr(string("Caracter necunoscut '") + c + "'", ln, col);
             ++i;
         }
     }
@@ -127,12 +127,12 @@ struct Lexer {
 int main() {
 
     string inPath;
-    cout << "Enter the path to the source file: ";
+    cout << "Introduceti calea catre fisierul sursa: ";
     getline(cin, inPath);
 
     ifstream fin(inPath);
     if (!fin) {
-         cerr << "Error: cannot open file '"<<inPath<<"'\n"; return 1;
+         cerr << "Eroare: nu se poate deschide fisierul '"<<inPath<<"'\n"; return 1;
     }
 
     Lexer L; L.run(fin);
@@ -142,7 +142,7 @@ int main() {
     for (auto& t : L.tokens) cout << left << setw(16) <<  t.type << setw(24) << t.lexeme << setw(8) << t.line << t.col << '\n';
 
     if (!L.errors.empty()) {
-        cout << "\nLexical errors ("<<L.errors.size()<<"):\n";
+        cout << "\nEroare lexicala ("<<L.errors.size()<<"):\n";
         for (auto& e : L.errors) 
             cout << e << '\n';
     }

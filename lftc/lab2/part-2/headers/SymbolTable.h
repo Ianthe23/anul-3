@@ -29,7 +29,7 @@ public:
     int addSymbol(const string& symbol);
     int findSymbol(const string& symbol);
     vector<pair<string, int>> getAllSymbols();
-    string getSymbolByIndex(int index);
+    string getSymbolByIndex(int index); // theta(1)
 };
 
 #endif

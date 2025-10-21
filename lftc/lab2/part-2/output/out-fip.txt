@@ -40,7 +40,6 @@ SEPARATOR      5       -           11      28
 KEYWORD        1       -           13      5
 OPERATOR       4       -           13      10
 STRING         6       -           13      13
-SEPARATOR      5       -           13      32
 KEYWORD        1       -           14      5
 OPERATOR       4       -           14      9
 IDENTIFIER     2       2           14      12

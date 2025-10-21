@@ -9,6 +9,7 @@ int main() {
     cout << "Introduceti calea catre fisierul sursa: ";
     getline(cin, inputPath);
     
+    // Input from file
     ifstream input(inputPath);
     if (!input) {
         cerr << "Eroare: nu pot deschide fisierul '" << inputPath << "'\n";

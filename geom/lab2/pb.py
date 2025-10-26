@@ -1,8 +1,57 @@
 from dataclasses import dataclass
 import math
 from typing import Tuple, Optional, List
+import builtins
+import atexit
+_log_file = None
+
+def setup_output_file(path="pb_output.txt"):
+    global _log_file
+    try:
+        _log_file = open(path, "w", encoding="utf-8")
+    except Exception:
+        _log_file = None
+
+def close_output_file():
+    global _log_file
+    if _log_file:
+        _log_file.close()
+        _log_file = None
+
+# print “tee”: si in consola, si in fisier (fara conversii)
+def print(*args, **kwargs):
+    sep = kwargs.get("sep", " ")
+    end = kwargs.get("end", "\n")
+    text = sep.join(str(a) for a in args)
+    if _log_file:
+        _log_file.write(text + end)
+        _log_file.flush()
+    builtins.print(*args, **kwargs)
+
+def input(prompt=""):
+    if _log_file:
+        _log_file.write(str(prompt))
+        _log_file.flush()
+    return builtins.input(prompt)
+
+atexit.register(close_output_file)
+
 
 Matrix4 = List[List[float]]
+
+# functii utilitare pentru inmultirea 4x4
+def mat4_mul(A: Matrix4, B: Matrix4) -> Matrix4:
+    C = [[0.0] * 4 for _ in range(4)]
+    for i in range(4):
+        for j in range(4):
+            C[i][j] = sum(A[i][k] * B[k][j] for k in range(4))
+    return C
+
+def mat4_chain(mats: List[Matrix4]) -> Matrix4:
+    M = mat4_identity()
+    for X in mats:
+        M = mat4_mul(M, X)
+    return M
 
 def mat4_identity() -> Matrix4:
     return [
@@ -38,6 +87,15 @@ def mat4_rotation_z(theta: float) -> Matrix4:
         [sin_a, cos_a, 0.0, 0.0],
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
+    ]
+
+def mat4_reflection_yz() -> Matrix4:
+    # Reflexie fata de planul YZ (x -> -x)
+    return [
+        [-1.0, 0.0, 0.0, 0.0],
+        [ 0.0, 1.0, 0.0, 0.0],
+        [ 0.0, 0.0, 1.0, 0.0],
+        [ 0.0, 0.0, 0.0, 1.0],
     ]
 
 def format_mat4(M: Matrix4) -> str:
@@ -102,7 +160,7 @@ def read_plane() -> Plane:
         if mode == "1":
             a, b, c, d = read_floats("Introduceti a b c d: ", 4)
             if abs(a) < EPS and abs(b) < EPS and abs(c) < EPS:
-                print("Vectorul normal (a,b,c) nu poate fi nul. Reincercați.")
+                print("Vectorul normal (a,b,c) nu poate fi nul. Reincercati.")
                 continue
             plane = Plane(a, b, c, d).normalized()
             return plane
@@ -112,7 +170,7 @@ def read_plane() -> Plane:
             nx, ny, nz = read_floats("Introduceti componentele vectorului normal n (nx ny nz): ", 3)
             norm_n = (nx**2 + ny**2 + nz**2) ** 0.5
             if norm_n < EPS:
-                print("Vectorul normal n nu poate fi nul. Reincercați.")
+                print("Vectorul normal n nu poate fi nul. Reincercati.")
                 continue
             # Versorul normal
             ax, by, cz = nx / norm_n, ny / norm_n, nz / norm_n
@@ -146,7 +204,7 @@ def axis_intersection(plane: Plane) -> Tuple[str, Tuple[float, float, float], st
     elif p.passes_through_origin():
         return "Z", (0.0, 0.0, 0.0), "axa Z este continuta in plan (infinit de puncte)"
 
-    # Ar trebui să fie imposibil pentru un plan valid să nu intersecteze nicio axă
+    # Ar trebui sa fie imposibil pentru un plan valid sa nu intersecteze nicio axa
     raise RuntimeError("Plan invalid: nu intersecteaza nicio axa de coordonate.")
 
 def main():
@@ -172,26 +230,31 @@ def main():
     print("\n=== Pasul 2: matricea translatiei care aduce planul prin origine ===")
     if plane.passes_through_origin():
         T = mat4_identity()
-        print("- Planul trece deja prin origine; translația NU este necesară.")
+        translation_needed = False
+        tx = ty = tz = 0.0
+        print("- Planul trece deja prin origine; translatia NU este necesară.")
     else:
         tx, ty, tz = -point[0], -point[1], -point[2]
+        translation_needed = True
         T = mat4_translation(tx, ty, tz)
-        print("- Matricea translației T (vector = (-x*, -y*, -z*)) unde P* este punctul ales pe plan:")
+        print("- Matricea translatiei T (vector = (-x*, -y*, -z*)) unde P* este punctul ales pe plan:")
         print(format_mat4(T)) 
-
     # -------- PASUL 3 --------
     print("\n=== Pasul 3: rotatie astfel incat normala sa fie paralela cu un plan de coordonate ===")
+    theta = 0.0
+    rot_y_needed = False
     par = plane.parallel_to_coordinate_plane()
     if par:
         R_y = mat4_identity()
-        print(f"- Planul este paralel cu planul de coordonate {par}; rotatia NU este necesară.")
+        print(f"- Planul este paralel cu planul de coordonate {par}; rotatia NU este necesara.")
     elif abs(plane.c) < EPS:
         R_y = mat4_identity()
         print("- Normala este deja paralela cu planul XY (c~0); rotatia NU este necesara.")
     else:
         theta = math.atan2(plane.c, plane.a)
+        rot_y_needed = True
         R_y = mat4_rotation_y(theta)
-        print(f"- Rotatie in jurul axei Y cu unghi θ = atan2(c, a) = {theta:.2f} rad.")
+        print(f"- Rotatie in jurul axei Y cu unghi theta = atan2(c, a) = {theta:.2f} rad.")
         print(format_mat4(R_y))
         a1 = (plane.a**2 + plane.c**2) ** 0.5
         b1 = plane.b
@@ -199,7 +262,209 @@ def main():
 
     # -------- PASUL 4 --------
     print("\n=== Pasul 4: rotatie astfel incat planul sa coincida cu un plan de coordonate ===")
+    A = math.sqrt(plane.a**2 + plane.c**2)
+    B = plane.b
+    phi = 0.0
+    rot_z_needed = False
+    if abs(B) < EPS:
+        R_z = mat4_identity()
+        print("- Dupa Pasul 3, componenta pe Y a normalei este ~ 0; rotatia in jurul Z NU este necesara.")
+    else:
+        phi = -math.atan2(B, A)
+        rot_z_needed = True
+        R_z = mat4_rotation_z(phi)
+        print(f"- Rotatie in jurul axei Z cu unghi phi = -atan2(b, sqrt(a^2+c^2)) = {phi:.2f} rad.")
+        print(format_mat4(R_z))
+        x2 = math.sqrt(A*A + B*B)  # ~ 1 pentru plan normalizat
+        print(f"- Normala dupa rotirea Z: ({x2:.2f}, {0.0:.2f}, {0.0:.2f}) -> aliniata pe Ox, planul coincide cu YZ.")
+
+    # -------- PASUL 5 --------
+    print("\n=== Pasul 5: matricea reflexiei fata de planul YZ ===")
+    Ref = mat4_reflection_yz()
+    print("- Matricea reflexiei F (fata de YZ: x -> -x):")
+    print(format_mat4(Ref))
     
+    # -------- PASUL 6 --------
+    print("\n=== Pasul 6: matricea rotatiei inverse fata de rotatia din Pasul 4 ===")
+    if rot_z_needed:
+        R_z_inv = mat4_rotation_z(-phi)
+        print(f"- Rotatia inversa in jurul Z cu unghi -phi = {(-phi):.2f} rad.")
+        print(format_mat4(R_z_inv))
+    else:
+        R_z_inv = mat4_identity()
+        print("- Pasul 4 nu a necesitat rotatie; matricea inversa este identitatea.")
+    
+    # -------- PASUL 7 --------
+    print("\n=== Pasul 7: matricea rotatiei inverse fata de rotatia din Pasul 3 ===")
+    if rot_y_needed:
+        R_y_inv = mat4_rotation_y(-theta)
+        print(f"- Rotatia inversa in jurul Y cu unghi -theta = {(-theta):.2f} rad.")
+        print(format_mat4(R_y_inv))
+    else:
+        R_y_inv = mat4_identity()
+        print("- Pasul 3 nu a necesitat rotatie; matricea inversa este identitatea.")
+
+    # -------- PASUL 8 --------
+    print("\n=== Pasul 8: matricea translatiei inverse celei de la Pasul 2 ===")
+    if translation_needed:
+        T_inv = mat4_translation(-tx, -ty, -tz)  # = mat4_translation(x*, y*, z*)
+        print("- Translatie inversa T_inv (vector = (x*, y*, z*)):")
+        print(format_mat4(T_inv))
+    else:
+        T_inv = mat4_identity()
+        print("- Planul trece prin origine; translatia inversa NU este necesara (identitate).")
+
+    # -------- PASUL 9: matricea transformarii compuse --------
+    print("\n=== Pasul 9: matricea transformarii compuse ===")
+    M = mat4_chain([T_inv, R_y_inv, R_z_inv, Ref, R_z, R_y, T])
+    print("- Matricea compusa M = T_inv · R_y_inv · R_z_inv · F · R_z · R_y · T:")
+    print(format_mat4(M))
+
+    # -------- PASUL 10 --------
+    print("\n=== Pasul 10: citirea varfurilor poliedrului ===")
+    while True:
+        try:
+            n_vertices = int(input("Introduceti numarul de varfuri ale poliedrului (>=1): "))
+            if n_vertices >= 1:
+                break
+            else:
+                print("Numarul de varfuri trebuie sa fie cel putin 1.")
+        except ValueError:
+            print("Introduceti un numar intreg valid.")
+    
+    vertices = []
+    for i in range(n_vertices):
+        x, y, z = read_floats(f"Introduceti coordonatele varfului {i+1} (x y z): ", 3)
+        vertices.append([x, y, z, 1.0])  # coordonate omogene
+    
+    print(f"- S-au citit {n_vertices} varfuri ale poliedrului.")
+
+    # -------- PASUL 11 --------
+    print("\n=== Pasul 11: matricea omogena a coordonatelor varfurilor transformate ===")
+    transformed_vertices = []
+    for vertex in vertices:
+        # Aplicam transformarea M asupra fiecarui varf (vector coloana)
+        transformed = [sum(M[i][j] * vertex[j] for j in range(4)) for i in range(4)]
+        transformed_vertices.append(transformed)
+    
+    print("- Matricea coordonatelor omogene ale varfurilor imaginii poliedrului:")
+    print("  [Varf 1] [Varf 2] ... [Varf n]")
+    for i in range(4):
+        row_str = "  "
+        for j in range(n_vertices):
+            row_str += f"{transformed_vertices[j][i]:10.6f} "
+        print(row_str)
+    
+    print("\n- Coordonatele carteziene ale varfurilor transformate:")
+    for i, tv in enumerate(transformed_vertices):
+        if abs(tv[3]) > EPS:  # normalizare omogena
+            x, y, z = tv[0]/tv[3], tv[1]/tv[3], tv[2]/tv[3]
+        else:
+            x, y, z = tv[0], tv[1], tv[2]  # punct la infinit
+        print(f"  Varf {i+1}: ({x:.6f}, {y:.6f}, {z:.6f})")
+
+def run_tests():
+    """Ruleaza teste automate pentru diferite cazuri speciale"""
+    print("=== TESTE AUTOMATE ===\n")
+    
+    test_cases = [
+        {
+            "name": "Plan paralel cu XY (z = 2)",
+            "plane": Plane(0, 0, 1, -2),
+            "vertices": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            "description": "Planul este paralel cu XY -> nu sunt necesare rotatii"
+        },
+        {
+            "name": "Plan paralel cu YZ (x = 3)", 
+            "plane": Plane(1, 0, 0, -3),
+            "vertices": [[0, 1, 0], [0, 0, 1], [1, 1, 1]],
+            "description": "Planul este paralel cu YZ -> nu sunt necesare rotatii"
+        },
+        {
+            "name": "Plan de coordonate XY (z = 0)",
+            "plane": Plane(0, 0, 1, 0),
+            "vertices": [[1, 0, 0], [0, 1, 0], [1, 1, 0]],
+            "description": "Plan de coordonate -> nu sunt necesare nici rotatii, nici translatii"
+        },
+        {
+            "name": "Plan oblic prin origine",
+            "plane": Plane(1, 1, 1, 0).normalized(),
+            "vertices": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            "description": "Planul trece prin origine -> nu este necesara translatia"
+        },
+        {
+            "name": "Plan oblic general",
+            "plane": Plane(1, 2, 3, -6).normalized(),
+            "vertices": [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+            "description": "Plan general -> toate transformarile sunt necesare"
+        }
+    ]
+    
+    for i, test in enumerate(test_cases, 1):
+        print(f"--- TEST {i}: {test['name']} ---")
+        print(f"Descriere: {test['description']}")
+        print(f"Ecuatia planului: {test['plane'].a:.3f}x + {test['plane'].b:.3f}y + {test['plane'].c:.3f}z + {test['plane'].d:.3f} = 0")
+        
+        # Verificări cazuri speciale
+        par = test['plane'].parallel_to_coordinate_plane()
+        coord_plane = test['plane'].is_coordinate_plane()
+        passes_origin = test['plane'].passes_through_origin()
+        
+        print(f"- Paralel cu plan de coordonate: {par if par else 'NU'}")
+        print(f"- Este plan de coordonate: {coord_plane if coord_plane else 'NU'}")
+        print(f"- Trece prin origine: {'DA' if passes_origin else 'NU'}")
+        
+        # Simulare transformari
+        axis, point, _ = axis_intersection(test['plane'])
+        print(f"- Intersectie cu axa {axis}: ({point[0]:.3f}, {point[1]:.3f}, {point[2]:.3f})")
+        
+        # Verificare necesitate transformari
+        need_translation = not passes_origin
+        need_rot_y = not par and abs(test['plane'].c) >= EPS
+        A = math.sqrt(test['plane'].a**2 + test['plane'].c**2)
+        B = test['plane'].b
+        need_rot_z = abs(B) >= EPS
+        
+        print(f"- Translatie necesara: {'DA' if need_translation else 'NU'}")
+        print(f"- Rotatie Y necesara: {'DA' if need_rot_y else 'NU'}")
+        print(f"- Rotatie Z necesara: {'DA' if need_rot_z else 'NU'}")
+        
+        # Calculare matrice compusa (versiune simplificata pentru test)
+        T = mat4_translation(-point[0], -point[1], -point[2]) if need_translation else mat4_identity()
+        R_y = mat4_rotation_y(math.atan2(test['plane'].c, test['plane'].a)) if need_rot_y else mat4_identity()
+        R_z = mat4_rotation_z(-math.atan2(B, A)) if need_rot_z else mat4_identity()
+        Ref = mat4_reflection_yz()
+        R_z_inv = mat4_rotation_z(math.atan2(B, A)) if need_rot_z else mat4_identity()
+        R_y_inv = mat4_rotation_y(-math.atan2(test['plane'].c, test['plane'].a)) if need_rot_y else mat4_identity()
+        T_inv = mat4_translation(point[0], point[1], point[2]) if need_translation else mat4_identity()
+        
+        M = mat4_chain([T_inv, R_y_inv, R_z_inv, Ref, R_z, R_y, T])
+        
+        # Aplicare pe primul varf ca exemplu
+        vertex = test['vertices'][0] + [1.0]  # coordonate omogene
+        transformed = [sum(M[i][j] * vertex[j] for j in range(4)) for i in range(4)]
+        
+        if abs(transformed[3]) > EPS:
+            x, y, z = transformed[0]/transformed[3], transformed[1]/transformed[3], transformed[2]/transformed[3]
+        else:
+            x, y, z = transformed[0], transformed[1], transformed[2]
+            
+        print(f"- Primul varf {test['vertices'][0]} → ({x:.3f}, {y:.3f}, {z:.3f})")
+        print()
+
+def main_interactive():
+    """Ruleaza programul in mod interactiv."""
+    main()
 
 if __name__ == "__main__":
-    main()
+    import sys
+    setup_output_file("pb_output.txt")
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        run_tests()
+    else:
+        print("Pentru teste automate, rulati: python pb.py --test")
+        print("Pentru mod interactiv, apasati Enter...")
+        input()
+        main_interactive()
+
+

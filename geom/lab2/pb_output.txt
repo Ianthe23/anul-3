@@ -1,0 +1,83 @@
+Pentru teste automate, rulati: python pb.py --test
+Pentru mod interactiv, apasati Enter...
+=== Pasul 1: determinarea punctului de intersectie dintre plan si o axa ===
+Planul se da prin (1=ecuatia generala, 2=punct si vector normal): Introduceti a b c d: 
+Rezultate:
+- Ecuația planului normalizata: 0.27 x + 0.53 y + 0.80 z + 1.07 = 0
+- Punct de intersectie ales (axa X): (-4.00, 0.00, 0.00)
+- Detaliu: intersectie unica cu axa X
+- Planul trece prin origine: NU
+
+=== Pasul 2: matricea translatiei care aduce planul prin origine ===
+- Matricea translatiei T (vector = (-x*, -y*, -z*)) unde P* este punctul ales pe plan:
+        1.00       0.00       0.00       4.00
+        0.00       1.00       0.00      -0.00
+        0.00       0.00       1.00      -0.00
+        0.00       0.00       0.00       1.00
+
+=== Pasul 3: rotatie astfel incat normala sa fie paralela cu un plan de coordonate ===
+- Rotatie in jurul axei Y cu unghi theta = atan2(c, a) = 1.25 rad.
+        0.32       0.00       0.95       0.00
+        0.00       1.00       0.00       0.00
+       -0.95       0.00       0.32       0.00
+        0.00       0.00       0.00       1.00
+- Normala dupa rotatie (a', b', c'): (0.85, 0.53, 0.00)  → paralela cu XY.
+
+=== Pasul 4: rotatie astfel incat planul sa coincida cu un plan de coordonate ===
+- Rotatie in jurul axei Z cu unghi phi = -atan2(b, sqrt(a^2+c^2)) = -0.56 rad.
+        0.85       0.53       0.00       0.00
+       -0.53       0.85       0.00       0.00
+        0.00       0.00       1.00       0.00
+        0.00       0.00       0.00       1.00
+- Normala dupa rotirea Z: (1.00, 0.00, 0.00) -> aliniata pe Ox, planul coincide cu YZ.
+
+=== Pasul 5: matricea reflexiei fata de planul YZ ===
+- Matricea reflexiei F (fata de YZ: x -> -x):
+       -1.00       0.00       0.00       0.00
+        0.00       1.00       0.00       0.00
+        0.00       0.00       1.00       0.00
+        0.00       0.00       0.00       1.00
+
+=== Pasul 6: matricea rotatiei inverse fata de rotatia din Pasul 4 ===
+- Rotatia inversa in jurul Z cu unghi -phi = 0.56 rad.
+        0.85      -0.53       0.00       0.00
+        0.53       0.85       0.00       0.00
+        0.00       0.00       1.00       0.00
+        0.00       0.00       0.00       1.00
+
+=== Pasul 7: matricea rotatiei inverse fata de rotatia din Pasul 3 ===
+- Rotatia inversa in jurul Y cu unghi -theta = -1.25 rad.
+        0.32       0.00      -0.95       0.00
+        0.00       1.00       0.00       0.00
+        0.95       0.00       0.32       0.00
+        0.00       0.00       0.00       1.00
+
+=== Pasul 8: matricea translatiei inverse celei de la Pasul 2 ===
+- Translatie inversa T_inv (vector = (x*, y*, z*)):
+        1.00       0.00       0.00      -4.00
+        0.00       1.00       0.00       0.00
+        0.00       0.00       1.00       0.00
+        0.00       0.00       0.00       1.00
+
+=== Pasul 9: matricea transformarii compuse ===
+- Matricea compusa M = T_inv · R_y_inv · R_z_inv · F · R_z · R_y · T:
+        0.86      -0.29      -0.43      -0.57
+       -0.29       0.43      -0.86      -1.14
+       -0.43      -0.86      -0.29      -1.71
+        0.00       0.00       0.00       1.00
+
+=== Pasul 10: citirea varfurilor poliedrului ===
+Introduceti numarul de varfuri ale poliedrului (>=1): Introduceti coordonatele varfului 1 (x y z): Introduceti coordonatele varfului 2 (x y z): Introduceti coordonatele varfului 3 (x y z): - S-au citit 3 varfuri ale poliedrului.
+
+=== Pasul 11: matricea omogena a coordonatelor varfurilor transformate ===
+- Matricea coordonatelor omogene ale varfurilor imaginii poliedrului:
+  [Varf 1] [Varf 2] ... [Varf n]
+   -1.571429  -1.428571  -1.285714 
+   -3.142857  -3.857143  -4.571429 
+   -4.714286  -6.285714  -7.857143 
+    1.000000   1.000000   1.000000 
+
+- Coordonatele carteziene ale varfurilor transformate:
+  Varf 1: (-1.571429, -3.142857, -4.714286)
+  Varf 2: (-1.428571, -3.857143, -6.285714)
+  Varf 3: (-1.285714, -4.571429, -7.857143)

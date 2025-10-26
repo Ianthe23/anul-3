@@ -1,0 +1,62 @@
+=== TESTE AUTOMATE ===
+
+--- TEST 1: Plan paralel cu XY (z = 2) ---
+Descriere: Planul este paralel cu XY -> nu sunt necesare rotatii
+Ecuatia planului: 0.000x + 0.000y + 1.000z + -2.000 = 0
+- Paralel cu plan de coordonate: XY
+- Este plan de coordonate: NU
+- Trece prin origine: NU
+- Intersectie cu axa Z: (0.000, 0.000, 2.000)
+- Translatie necesara: DA
+- Rotatie Y necesara: NU
+- Rotatie Z necesara: NU
+- Primul varf [1, 0, 0] → (-1.000, 0.000, 0.000)
+
+--- TEST 2: Plan paralel cu YZ (x = 3) ---
+Descriere: Planul este paralel cu YZ -> nu sunt necesare rotatii
+Ecuatia planului: 1.000x + 0.000y + 0.000z + -3.000 = 0
+- Paralel cu plan de coordonate: YZ
+- Este plan de coordonate: NU
+- Trece prin origine: NU
+- Intersectie cu axa X: (3.000, 0.000, 0.000)
+- Translatie necesara: DA
+- Rotatie Y necesara: NU
+- Rotatie Z necesara: NU
+- Primul varf [0, 1, 0] → (6.000, 1.000, 0.000)
+
+--- TEST 3: Plan de coordonate XY (z = 0) ---
+Descriere: Plan de coordonate -> nu sunt necesare nici rotatii, nici translatii
+Ecuatia planului: 0.000x + 0.000y + 1.000z + 0.000 = 0
+- Paralel cu plan de coordonate: XY
+- Este plan de coordonate: XY
+- Trece prin origine: DA
+- Intersectie cu axa X: (0.000, 0.000, 0.000)
+- Translatie necesara: NU
+- Rotatie Y necesara: NU
+- Rotatie Z necesara: NU
+- Primul varf [1, 0, 0] → (-1.000, 0.000, 0.000)
+
+--- TEST 4: Plan oblic prin origine ---
+Descriere: Planul trece prin origine -> nu este necesara translatia
+Ecuatia planului: 0.577x + 0.577y + 0.577z + 0.000 = 0
+- Paralel cu plan de coordonate: NU
+- Este plan de coordonate: NU
+- Trece prin origine: DA
+- Intersectie cu axa X: (-0.000, 0.000, 0.000)
+- Translatie necesara: NU
+- Rotatie Y necesara: DA
+- Rotatie Z necesara: DA
+- Primul varf [1, 0, 0] → (0.333, -0.667, -0.667)
+
+--- TEST 5: Plan oblic general ---
+Descriere: Plan general -> toate transformarile sunt necesare
+Ecuatia planului: 0.267x + 0.535y + 0.802z + -1.604 = 0
+- Paralel cu plan de coordonate: NU
+- Este plan de coordonate: NU
+- Trece prin origine: NU
+- Intersectie cu axa X: (6.000, 0.000, 0.000)
+- Translatie necesara: DA
+- Rotatie Y necesara: DA
+- Rotatie Z necesara: DA
+- Primul varf [0, 0, 0] → (0.857, 1.714, 2.571)
+

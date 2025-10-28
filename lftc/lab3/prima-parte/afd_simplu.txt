@@ -1,0 +1,17 @@
+# AFD simplu: accepta exact sirurile care se termina cu "ab"
+states {q0,q1,q2}
+alphabet {a,b}
+initial q0
+final {q2}
+transitions
+# din start: "a" -> am vazut un 'a', "b" -> raman în start
+(q0,a)->q1;
+(q0,b)->q0;
+
+# daca ultimul este 'a': "a" pastreaza 'a', "b" finalizeaza cu "ab"
+(q1,a)->q1;
+(q1,b)->q2;
+
+# dacă s-a terminat cu "ab": urmatorul 'a' poate duce iar spre "a", 'b' strica sufixul
+(q2,a)->q1;
+(q2,b)->q0;

@@ -217,7 +217,7 @@ def main():
     coord_plane = plane.is_coordinate_plane()
 
     print("\nRezultate:")
-    print(f"- Ecuația planului normalizata: {plane.a:.2f} x + {plane.b:.2f} y + {plane.c:.2f} z + {plane.d:.2f} = 0")
+    print(f"- Ecuatia planului normalizata: {plane.a:.2f} x + {plane.b:.2f} y + {plane.c:.2f} z + {plane.d:.2f} = 0")
     print(f"- Punct de intersectie ales (axa {axis}): ({point[0]:.2f}, {point[1]:.2f}, {point[2]:.2f})")
     print(f"- Detaliu: {msg}")
     print(f"- Planul trece prin origine: {'DA' if plane.passes_through_origin() else 'NU'}")

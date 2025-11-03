@@ -3,7 +3,7 @@ Pentru mod interactiv, apasati Enter...
 === Pasul 1: determinarea punctului de intersectie dintre plan si o axa ===
 Planul se da prin (1=ecuatia generala, 2=punct si vector normal): Introduceti a b c d: 
 Rezultate:
-- Ecuația planului normalizata: 0.27 x + 0.53 y + 0.80 z + 1.07 = 0
+- Ecuatia planului normalizata: 0.27 x + 0.53 y + 0.80 z + 1.07 = 0
 - Punct de intersectie ales (axa X): (-4.00, 0.00, 0.00)
 - Detaliu: intersectie unica cu axa X
 - Planul trece prin origine: NU

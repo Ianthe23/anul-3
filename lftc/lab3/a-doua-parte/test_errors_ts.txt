@@ -1,0 +1,26 @@
+Tabela de Simboluri (TS)
+========================================
+Pozitie    Simbol                        
+----------------------------------------
+0: main
+1: x
+2: 5
+3: y
+4: 3.14
+5: invalid
+6: character
+7: bad
+8: 10
+9: z
+10: 123
+11: abc
+12: 20
+13: str
+14: unterminated
+15: c
+16: ab
+17: 1
+18: valid
+19: 0xFF
+20: 0
+21: xGHIJ

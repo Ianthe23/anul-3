@@ -1,0 +1,14 @@
+StateMachine
+  description: String /** Descrierea automatului */
+  startState: State /** Starea inițială */
+  states: List<State> /** Listă de stări (în loc de Set) */
+  /** Redundanța este gestionată prin verificări manuale */
+
+State
+  name: String /** Numele stării (identificator unic) */
+  isAcceptState: Boolean /** Dacă este stare de acceptare */
+  transitions: List<Transition> /** Listă de tranziții (în loc de MultiMap) */
+
+Transition
+  symbol: String /** Simbolul de intrare */
+  targetStates: List<State> /** Listă de stări destinație */

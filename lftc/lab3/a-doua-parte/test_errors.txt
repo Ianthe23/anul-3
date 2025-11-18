@@ -1,0 +1,25 @@
+int main() {
+    int x = 5;
+    float y = 3.14;
+
+    @ invalid character
+
+    int #bad = 10;
+
+    float z = 3.14.5;
+
+    int 123abc = 20;
+
+    string str = "unterminated string
+
+    char c = 'ab';
+
+    if (x > $ 10) {
+        y = y + 1;
+    }
+
+    int valid = 0xFF;
+    int invalid = 0xGHIJ;
+
+    return 0;
+}

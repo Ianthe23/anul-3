@@ -1,0 +1,152 @@
+# AFD pentru literale intregi C/C++ (subset cu sufixe comune)
+states {q0,qZ,qD,qH1,qH,qB1,qB,qO,qU,qL1,qLL,qUL1,qULL}
+alphabet {0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f,A,B,C,D,E,F,x,X,b,B,u,U,l,L}
+initial q0
+final {qZ,qD,qO,qH,qB,qU,qL1,qLL,qUL1,qULL}
+transitions
+# start
+(q0,0)->qZ;
+(q0,1)->qD;
+(q0,2)->qD;
+(q0,3)->qD;
+(q0,4)->qD;
+(q0,5)->qD;
+(q0,6)->qD;
+(q0,7)->qD;
+(q0,8)->qD;
+(q0,9)->qD;
+
+# zecimal
+(qD,0)->qD;
+(qD,1)->qD;
+(qD,2)->qD;
+(qD,3)->qD;
+(qD,4)->qD;
+(qD,5)->qD;
+(qD,6)->qD;
+(qD,7)->qD;
+(qD,8)->qD;
+(qD,9)->qD;
+(qD,u)->qU;
+(qD,U)->qU;
+(qD,l)->qL1;
+(qD,L)->qL1;
+
+# zero / prefixe baza
+(qZ,x)->qH1;
+(qZ,X)->qH1;
+(qZ,b)->qB1;
+(qZ,B)->qB1;
+(qZ,0)->qO;
+(qZ,1)->qO;
+(qZ,2)->qO;
+(qZ,3)->qO;
+(qZ,4)->qO;
+(qZ,5)->qO;
+(qZ,6)->qO;
+(qZ,7)->qO;
+# sufixe dupa '0'
+(qZ,u)->qU;
+(qZ,U)->qU;
+(qZ,l)->qL1;
+(qZ,L)->qL1;
+
+# octal
+(qO,0)->qO;
+(qO,1)->qO;
+(qO,2)->qO;
+(qO,3)->qO;
+(qO,4)->qO;
+(qO,5)->qO;
+(qO,6)->qO;
+(qO,7)->qO;
+(qO,u)->qU;
+(qO,U)->qU;
+(qO,l)->qL1;
+(qO,L)->qL1;
+
+# hex prefix -> prima cifra hex obligatorie
+(qH1,0)->qH;
+(qH1,1)->qH;
+(qH1,2)->qH;
+(qH1,3)->qH;
+(qH1,4)->qH;
+(qH1,5)->qH;
+(qH1,6)->qH;
+(qH1,7)->qH;
+(qH1,8)->qH;
+(qH1,9)->qH;
+(qH1,a)->qH;
+(qH1,b)->qH;
+(qH1,c)->qH;
+(qH1,d)->qH;
+(qH1,e)->qH;
+(qH1,f)->qH;
+(qH1,A)->qH;
+(qH1,B)->qH;
+(qH1,C)->qH;
+(qH1,D)->qH;
+(qH1,E)->qH;
+(qH1,F)->qH;
+
+# hex continuare
+(qH,0)->qH;
+(qH,1)->qH;
+(qH,2)->qH;
+(qH,3)->qH;
+(qH,4)->qH;
+(qH,5)->qH;
+(qH,6)->qH;
+(qH,7)->qH;
+(qH,8)->qH;
+(qH,9)->qH;
+(qH,a)->qH;
+(qH,b)->qH;
+(qH,c)->qH;
+(qH,d)->qH;
+(qH,e)->qH;
+(qH,f)->qH;
+(qH,A)->qH;
+(qH,B)->qH;
+(qH,C)->qH;
+(qH,D)->qH;
+(qH,E)->qH;
+(qH,F)->qH;
+(qH,u)->qU;
+(qH,U)->qU;
+(qH,l)->qL1;
+(qH,L)->qL1;
+
+# binar prefix -> prima cifra bin obligatorie
+(qB1,0)->qB;
+(qB1,1)->qB;
+
+# binar continuare
+(qB,0)->qB;
+(qB,1)->qB;
+(qB,u)->qU;
+(qB,U)->qU;
+(qB,l)->qL1;
+(qB,L)->qL1;
+
+# sufixe
+# 'u' sau 'U' final
+(qU,l)->qUL1;
+(qU,L)->qUL1;
+
+# 'l' sau 'L' final
+(qL1,l)->qLL;
+(qL1,L)->qLL;
+(qL1,u)->qUL1;
+(qL1,U)->qUL1;
+
+# 'll' sau 'LL' final
+(qLL,u)->qULL;
+(qLL,U)->qULL;
+
+# 'ul' sau 'uL' / 'lu' sau 'Lu' final
+(qUL1,l)->qULL;
+(qUL1,L)->qULL;
+
+# 'ull' / 'uLL' / 'llu' / 'LLu' final
+# (stare finala, fara tranzitii suplimentare)

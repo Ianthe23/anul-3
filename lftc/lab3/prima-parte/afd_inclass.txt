@@ -1,0 +1,19 @@
+# AFD: { b^m | m E N } ∪ { a b^(2n) a | n E N }
+# Stari: q0=start (accepta epsilon), q1=doar b-uri (acceptant),
+#        q2=dupa 'a' cu numar par de 'b'-uri, q3=dupa 'a' cu numar impar de 'b'-uri,
+#        q4=final dupa "a b^(par) a" (acceptant)
+
+states {q0,q1,q2,q3,q4}
+alphabet {a,b}
+initial q0
+final {q0,q1,q4}
+transitions
+# doar b-uri
+(q0,b)->q1;
+(q1,b)->q1;
+
+# ramura "a b^(par) a"
+(q0,a)->q2;
+(q2,b)->q3;
+(q2,a)->q4;
+(q3,b)->q2;

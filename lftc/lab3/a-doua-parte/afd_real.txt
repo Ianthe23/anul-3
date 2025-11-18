@@ -1,0 +1,115 @@
+# AFD pentru constante numere reale (floating point)
+# Pattern: [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFlL]?
+# Accepta forme: 123.456, 3.14e10, 2.5E-3, 1.0f, etc.
+
+states {q0,qInt,qDot,qFrac,qE,qESign,qExp,qSuffix}
+alphabet {0,1,2,3,4,5,6,7,8,9,.,e,E,+,-,f,F,l,L}
+initial q0
+final {qFrac,qExp,qSuffix}
+transitions
+
+# Parte intreaga (obligatorie)
+(q0,0)->qInt;
+(q0,1)->qInt;
+(q0,2)->qInt;
+(q0,3)->qInt;
+(q0,4)->qInt;
+(q0,5)->qInt;
+(q0,6)->qInt;
+(q0,7)->qInt;
+(q0,8)->qInt;
+(q0,9)->qInt;
+
+# Mai multe cifre in partea intreaga
+(qInt,0)->qInt;
+(qInt,1)->qInt;
+(qInt,2)->qInt;
+(qInt,3)->qInt;
+(qInt,4)->qInt;
+(qInt,5)->qInt;
+(qInt,6)->qInt;
+(qInt,7)->qInt;
+(qInt,8)->qInt;
+(qInt,9)->qInt;
+
+# Punct zecimal (obligatoriu pentru numere reale)
+(qInt,.)->qDot;
+
+# Parte fractionara (obligatorie dupa punct)
+(qDot,0)->qFrac;
+(qDot,1)->qFrac;
+(qDot,2)->qFrac;
+(qDot,3)->qFrac;
+(qDot,4)->qFrac;
+(qDot,5)->qFrac;
+(qDot,6)->qFrac;
+(qDot,7)->qFrac;
+(qDot,8)->qFrac;
+(qDot,9)->qFrac;
+
+# Mai multe cifre in partea fractionara
+(qFrac,0)->qFrac;
+(qFrac,1)->qFrac;
+(qFrac,2)->qFrac;
+(qFrac,3)->qFrac;
+(qFrac,4)->qFrac;
+(qFrac,5)->qFrac;
+(qFrac,6)->qFrac;
+(qFrac,7)->qFrac;
+(qFrac,8)->qFrac;
+(qFrac,9)->qFrac;
+
+# Exponent (optional)
+(qFrac,e)->qE;
+(qFrac,E)->qE;
+
+# Semn exponent (optional)
+(qE,+)->qESign;
+(qE,-)->qESign;
+
+# Cifre exponent (obligatorii dupa e/E)
+(qE,0)->qExp;
+(qE,1)->qExp;
+(qE,2)->qExp;
+(qE,3)->qExp;
+(qE,4)->qExp;
+(qE,5)->qExp;
+(qE,6)->qExp;
+(qE,7)->qExp;
+(qE,8)->qExp;
+(qE,9)->qExp;
+
+# Cifre exponent dupa semn
+(qESign,0)->qExp;
+(qESign,1)->qExp;
+(qESign,2)->qExp;
+(qESign,3)->qExp;
+(qESign,4)->qExp;
+(qESign,5)->qExp;
+(qESign,6)->qExp;
+(qESign,7)->qExp;
+(qESign,8)->qExp;
+(qESign,9)->qExp;
+
+# Mai multe cifre in exponent
+(qExp,0)->qExp;
+(qExp,1)->qExp;
+(qExp,2)->qExp;
+(qExp,3)->qExp;
+(qExp,4)->qExp;
+(qExp,5)->qExp;
+(qExp,6)->qExp;
+(qExp,7)->qExp;
+(qExp,8)->qExp;
+(qExp,9)->qExp;
+
+# Sufix optional (f, F, l, L)
+(qFrac,f)->qSuffix;
+(qFrac,F)->qSuffix;
+(qFrac,l)->qSuffix;
+(qFrac,L)->qSuffix;
+
+(qExp,f)->qSuffix;
+(qExp,F)->qSuffix;
+(qExp,l)->qSuffix;
+(qExp,L)->qSuffix;

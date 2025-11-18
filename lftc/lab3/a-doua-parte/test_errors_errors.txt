@@ -1,0 +1,9 @@
+Erori Lexicale
+============================================================
+Eroare lexicala la linia 5, coloana 5: caracter invalid '@'
+Eroare lexicala la linia 7, coloana 9: caracter invalid '#'
+Eroare lexicala la linia 9, coloana 19: caracter invalid '.'
+Eroare lexicala la linia 13, coloana 18: caracter invalid '"'
+Eroare lexicala la linia 15, coloana 14: caracter invalid '''
+Eroare lexicala la linia 15, coloana 17: caracter invalid '''
+Eroare lexicala la linia 17, coloana 13: caracter invalid '$'

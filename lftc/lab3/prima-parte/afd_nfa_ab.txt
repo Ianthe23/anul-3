@@ -1,0 +1,20 @@
+# NFA simplu: accepta toate sirurile care contin substringul "ab"
+# Nedeterminism: din q0 pe 'a' mergem atat in q0, cat si in q1.
+
+states {q0,q1,q2}
+alphabet {a,b}
+initial q0
+final {q2}
+transitions
+# bucla pe q0 pentru a/b, + ramura nedeterminista pe 'a' catre q1
+(q0,a)->q0;
+(q0,a)->q1;
+(q0,b)->q0;
+
+# din q1, pe 'b' ajungem in q2 (am gasit "ab"); pe 'a' ramanem in q1 (cautam inca 'b')
+(q1,a)->q1;
+(q1,b)->q2;
+
+# odata ajunsi in q2, ramanem acceptanti indiferent de ce urmeaza
+(q2,a)->q2;
+(q2,b)->q2;

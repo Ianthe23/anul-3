@@ -1,0 +1,44 @@
+# Format fisier AF (EBNF) — compatibil cu automaton.py
+# Observatii:
+# - Comentariile incep cu '#' si tin pana la sfarsitul liniei.
+# - Spatiile si newline-urile sunt ignorate intre token-uri.
+# - Cuvintele-cheie "states", "alphabet", "initial", "final", "transitions" sunt case-insensitive.
+# - "epsilon" se scrie exact în litere mici.
+# - Itemii din 'alphabet' sunt simboluri de UN caracter (nu "epsilon").
+
+Automaton    = States, Alphabet, Initial, Final, Transitions ;
+
+States       = "states", Set(State) ;
+Alphabet     = "alphabet", Set(Symbol) ;
+Initial      = "initial", State ;
+Final        = "final", Set(State) ;
+Transitions  = "transitions", { Transition } ;
+
+Set(X)       = "{", [ X, { ",", X } ], "}" ;
+
+Transition   = "(", State, ",", Symbol, ")", "->", State, [ ";" ] ;
+
+State        = Identifier ;
+Symbol       = "epsilon" | Char ;
+
+# Lexeme
+Identifier   = LetterOrDigitOrUnderscore, { LetterOrDigitOrUnderscore } ;
+Char         = any single visible character (un singur caracter din alfabet) ;
+LetterOrDigitOrUnderscore = "A" | "B" | ... | "Z"
+                          | "a" | "b" | ... | "z"
+                          | "0" | "1" | ... | "9"
+                          | "_" ;
+
+# Conditii semantice (valideaza fisierul)
+# - Multimea 'states' trebuie sa includa cel putin starea initiala.
+# - 'final' include 'states'.
+# - Pentru fiecare tranzitie (src, sym) -> dest:
+#   - src E states, dest E states.
+#   - Daca sym != "epsilon", atunci sym trebuie sa fie Char ∈ alphabet (lungime 1).
+# - Prezenta mai multor tranzitii pentru aceeasi pereche (state, symbol) indica un NFA.
+# - Lipsa tranzitiei pentru o pereche (state, symbol) implica respingere la simulare (nu e necesara starea capcana).
+
+# Exemple valide (vezi fisierele din proiect):
+# - afd_simplu.txt: AFD pe {a,b} care accepta siruri ce se termina cu "ab".
+# - afd_nfa_ab.txt: NFA pe {a,b} care accepta siruri ce contin substringul "ab".
+# - afd_int_cxx.txt: AFD pentru literalele intregi (subset) din C/C++.

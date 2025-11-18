@@ -1,0 +1,54 @@
+int fibonacci(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+float calculate_area(float radius) {
+    float pi = 3.14159;
+    return pi * radius * radius;
+}
+
+int main() {
+    int count = 0;
+    float temperature = 23.5;
+    float pressure = 1.013e5;
+    bool is_valid = true;
+
+    int decimal_num = 42;
+    int hex_num = 0xDEADBEEF;
+    int octal_num = 0755;
+    int binary_num = 0b11010110;
+
+    float scientific1 = 1.23e-4;
+    float scientific2 = 5.67E+8;
+    float simple_float = 0.001;
+
+    string message = "Hello World";
+    char letter = 'A';
+
+    for (int i = 0; i < 10; i = i + 1) {
+        count = count + 1;
+        temperature = temperature + 0.5;
+    }
+
+    while (count > 0 && is_valid) {
+        count = count - 1;
+
+        if (count == 5 || count == 3) {
+            write(count);
+        }
+    }
+
+    int result = fibonacci(10);
+    float area = calculate_area(5.0);
+
+    if (result >= 50 && result <= 100) {
+        write(result);
+    } else {
+        result = result * 2;
+    }
+
+    return 0;
+}

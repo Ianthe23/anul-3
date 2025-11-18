@@ -1,5 +1,4 @@
-from typing import Dict, Set, Tuple, Optional
-import re
+from typing import Dict, Optional, Set, Tuple
 
 EPSILON = "epsilon"
 
@@ -24,7 +23,9 @@ class Automaton:
 
         # Basic validation
         if self.initial_state not in self.states:
-            raise ValueError(f"Starea inițială '{self.initial_state}' nu există în 'states'.")
+            raise ValueError(
+                f"Starea inițială '{self.initial_state}' nu există în 'states'."
+            )
         if not self.final_states.issubset(self.states):
             raise ValueError("Unele stări finale nu există în 'states'.")
 
@@ -61,65 +62,125 @@ class Automaton:
             return set([item.strip() for item in inner.split(",") if item.strip()])
         raise ValueError(f"Set invalid: {body}")
 
+    @staticmethod
+    def _find_section(text: str, keyword: str) -> Optional[str]:
+        """
+        Cauta sectiunea cu keyword-ul dat in text.
+        Returneaza continutul sectiunii sau None daca nu gaseste.
+        """
+        lines = text.split("\n")
+        keyword_lower = keyword.lower()
+
+        for i, line in enumerate(lines):
+            line_stripped = line.strip().lower()
+            if line_stripped.startswith(keyword_lower):
+                # Extragem partea dupa keyword
+                rest = line.strip()[len(keyword) :].strip()
+                return rest
+        return None
+
+    @staticmethod
+    def _parse_transitions(text: str) -> Dict[Tuple[str, str], Set[str]]:
+        """
+        Parseaza tranzitiile din text.
+        Format: (src,sym)->dest; sau (src,sym)->dest
+        """
+        transitions: Dict[Tuple[str, str], Set[str]] = {}
+
+        # Gasim linia cu "transitions"
+        lines = text.split("\n")
+        trans_start = -1
+        for i, line in enumerate(lines):
+            if line.strip().lower().startswith("transitions"):
+                trans_start = i + 1
+                break
+
+        if trans_start == -1:
+            raise ValueError("Nu s-a gasit sectiunea 'transitions'")
+
+        # Parsam fiecare tranzitie
+        for i in range(trans_start, len(lines)):
+            line = lines[i].strip()
+            if not line:
+                continue
+
+            # Cautam pattern (src,sym)->dest
+            if "(" not in line or ")" not in line or "->" not in line:
+                continue
+
+            # Extragem sursa si simbolul
+            paren_start = line.find("(")
+            paren_end = line.find(")")
+            if paren_start == -1 or paren_end == -1:
+                continue
+
+            inside_paren = line[paren_start + 1 : paren_end]
+            parts = inside_paren.split(",")
+            if len(parts) != 2:
+                continue
+
+            src = parts[0].strip()
+            sym = parts[1].strip()
+
+            # Extragem destinatia
+            arrow_pos = line.find("->", paren_end)
+            if arrow_pos == -1:
+                continue
+
+            after_arrow = line[arrow_pos + 2 :].strip()
+            # Eliminam ; daca exista
+            if after_arrow.endswith(";"):
+                after_arrow = after_arrow[:-1].strip()
+
+            dest = after_arrow
+
+            if not src or not sym or not dest:
+                continue
+
+            # Adaugam tranzitia
+            key = (src, sym)
+            transitions.setdefault(key, set()).add(dest)
+
+        return transitions
+
     @classmethod
     def from_text(cls, text: str) -> "Automaton":
         """
-        Asteapta formatul EBNF descris mai sus.
-        Exemple tranzitii:
-          (q0,0)->q1;
-          (q1,epsilon)->q2;
+        Parseaza automatul din text folosind parsing manual (fara regex).
         """
         text = cls._strip_comments(text)
 
-        # Match sections with regex
-        def search_section(name: str, pattern: str) -> Optional[re.Match]:
-            return re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
+        # Gasim sectiunile
+        states_str = cls._find_section(text, "states")
+        alphabet_str = cls._find_section(text, "alphabet")
+        initial_str = cls._find_section(text, "initial")
+        final_str = cls._find_section(text, "final")
 
-        # Extract sections
-        m_states = search_section("states", r"states\s*({[^}]*})")
-        m_alphabet = search_section("alphabet", r"alphabet\s*({[^}]*})")
-        m_initial = search_section("initial", r"initial\s*([A-Za-z0-9_]+)")
-        m_final = search_section("final", r"final\s*({[^}]*})")
-        m_transitions = search_section("transitions", r"transitions\s*(.*)")
-
-        # Validate sections
-        if not (m_states and m_alphabet and m_initial and m_final and m_transitions):
-            raise ValueError("Fisier incomplet. Sectiuni necesare: states, alphabet, initial, final, transitions.")
+        if not (states_str and alphabet_str and initial_str and final_str):
+            raise ValueError(
+                "Fisier incomplet. Sectiuni necesare: states, alphabet, initial, final, transitions."
+            )
 
         # Parse sections
-        states = cls._parse_set(m_states.group(1))
-        alphabet = cls._parse_set(m_alphabet.group(1))
-        initial = m_initial.group(1).strip()
-        final_states = cls._parse_set(m_final.group(1))
+        states = cls._parse_set(states_str)
+        alphabet = cls._parse_set(alphabet_str)
+        initial = initial_str.strip()
+        final_states = cls._parse_set(final_str)
 
-        transitions_block = m_transitions.group(1)
-        # Extract transition lines until end of string
-        # Pattern: (src,sym)->dest;
-        trans_pattern = re.compile(
-            r"\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]|epsilon)\s*\)\s*->\s*([A-Za-z0-9_]+)\s*;?",
-            flags=re.IGNORECASE,
-        )
-
-        # initialize the structure for transitions
-        # key: (src, sym), value: set of dest states
-        transitions: Dict[Tuple[str, str], Set[str]] = {}
         # Parse transitions
-        # for each line, extract src, sym, dest
-        for match in trans_pattern.finditer(transitions_block):
-            src = match.group(1)
-            sym = match.group(2)
-            dest = match.group(3)
+        transitions = cls._parse_transitions(text)
 
-            # validate src and dest states
-            if src not in states or dest not in states:
-                raise ValueError(f"Stari in tranzitie necunoscute: ({src}, {sym}) -> {dest}")
-
-            # epsilon poate fi in NFA; pentru DFA nu trebuie sa apara
+        # Validam tranzitiile
+        for (src, sym), dests in transitions.items():
+            if src not in states:
+                raise ValueError(f"Starea sursa '{src}' nu exista in 'states'")
+            for dest in dests:
+                if dest not in states:
+                    raise ValueError(
+                        f"Starea destinatie '{dest}' nu exista in 'states'"
+                    )
             if sym != EPSILON and sym not in alphabet:
                 raise ValueError(f"Simbolul '{sym}' nu exista in alfabet.")
-
-            key = (src, sym)
-            transitions.setdefault(key, set()).add(dest)
 
         return cls(states, alphabet, transitions, initial, final_states)
 
@@ -138,16 +199,22 @@ class Automaton:
         states_in = input("> ").strip()
         states = set(s.strip() for s in states_in.split(",") if s.strip())
 
-        print("Introduceti alfabetul, simboluri de 1 caracter sau 'epsilon', separate prin virgule (ex: 0,1,a,b):")
+        print(
+            "Introduceti alfabetul, simboluri de 1 caracter sau 'epsilon', separate prin virgule (ex: 0,1,a,b):"
+        )
         alpha_in = input("> ").strip()
-        alphabet = set(s.strip() for s in alpha_in.split(",") if s.strip() and s.strip() != EPSILON)
+        alphabet = set(
+            s.strip() for s in alpha_in.split(",") if s.strip() and s.strip() != EPSILON
+        )
 
         print("Introduceti starea initiala:")
         initial = input("> ").strip()
         if initial not in states:
             raise ValueError("Starea initiala nu exista in multimea de stari.")
 
-        print("Introduceti multimea de stari finale, separate prin virgule (ex: q1,q2):")
+        print(
+            "Introduceti multimea de stari finale, separate prin virgule (ex: q1,q2):"
+        )
         finals_in = input("> ").strip()
         finals = set(s.strip() for s in finals_in.split(",") if s.strip())
         if not finals.issubset(states):
@@ -160,12 +227,16 @@ class Automaton:
             raise ValueError("Număr de tranzitii invalid.")
 
         transitions: Dict[Tuple[str, str], Set[str]] = {}
-        print("Introduceti fiecare tranzitie pe o linie: <sursa> <simbol|epsilon> <destinatie>")
+        print(
+            "Introduceti fiecare tranzitie pe o linie: <sursa> <simbol|epsilon> <destinatie>"
+        )
         for i in range(n):
             line = input(f"t{i + 1}> ").strip()
             parts = line.split()
             if len(parts) != 3:
-                raise ValueError("Format tranzitie invalid. Asteptat: <sursa> <simbol|epsilon> <destinatie>")
+                raise ValueError(
+                    "Format tranzitie invalid. Asteptat: <sursa> <simbol|epsilon> <destinatie>"
+                )
             src, sym, dest = parts
             if src not in states or dest not in states:
                 raise ValueError("Stari necunoscute in tranzitie.")

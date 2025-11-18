@@ -1,0 +1,19 @@
+int main() {
+    int x = 123;
+    float y = 3.14;
+    float z = 2.5e-3;
+    int hex = 0xFF;
+    int bin = 0b1010;
+
+    if (x > 10) {
+        y = y + 1.5;
+    } else {
+        z = z * 2.0;
+    }
+
+    while (x != 0) {
+        x = x - 1;
+    }
+
+    return 0;
+}

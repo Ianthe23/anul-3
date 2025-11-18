@@ -1,0 +1,23 @@
+=== TABELA DE SIMBOLURI (TS) ===
+INDEX     SIMBOL
+------------------------------
+18        0
+17        0xFF
+15        1
+6         10
+8         123
+10        20
+1         5
+14        ab
+9         abc
+5         bad
+13        c
+4         character
+3         invalid
+12        str
+11        string
+16        valid
+0         x
+19        xGHIJ
+2         y
+7         z

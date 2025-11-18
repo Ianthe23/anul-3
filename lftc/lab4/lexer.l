@@ -1,4 +1,6 @@
 /* lab2/part-2/lexer.l */
+/* %option noyywrap tells Flex not to call yywrap at EOF; scanning ends without extra hooks. */
+/* %option yylineno tells Flex to keep track of line numbers. */
 %option noyywrap
 %option yylineno
 
@@ -20,7 +22,8 @@ using namespace std;
 static const unordered_set<string> KEYWORDS = {
     "include","iostream","using","namespace","std",
     "cout","cin","main","while","return","int",
-    "struct","double","if","else","float","char","for","do"
+    "struct","double","if","else","float","char","for","do",
+    "then","endif"
 };
 
 static const string SINGLE_OP = "+-=*/%><";
@@ -31,8 +34,9 @@ vector<string> errors;
 
 int column = 1;
 
-void addToFIP(const string& tokenType, int code, int line, int col, const string& lexeme = "");
+void addToFIP(const string& tokenType, int code, int line, int col, const string& lexeme);
 void addError(const string& msg, int line, int col);
+void updateIfFSM(const string& tokenType, const string& lexeme, int line, int col);
 void printFIP();
 void printSymbolTable();
 void printErrors();
@@ -40,24 +44,33 @@ void printErrors();
 %}
 %%
 
-/* Spatii albe */
-[ \t\r]+   { column += yyleng; }
+[ \t\r]+   { 
+    /* Spatii albe */ 
+    column += yyleng; 
+}
 
-/* Newline */
-\n         { column = 1; }
+\n         { 
+    /* Newline */
+    column = 1;
+}
 
-/* Comentariu //... */
-\/\/[^\n]*     { column += yyleng; }
 
-/* String inchis: permite escape-uri, fara newline */
+\/\/[^\n]*     { 
+    /* Comentariu linie */
+    column += yyleng; 
+}
+
+
 \"([^\"\\\n]|\\.)*\" {
+    /* String */
     int start_col = column;
     column += yyleng;
     addToFIP("STRING", STRING_CODE, yylineno, start_col, string(yytext, yyleng));
 }
 
-/* String neterminat: ajunge la newline sau EOF fara " */
+
 \"([^\"\n]|\\.)*[\n] {
+    /* String neterminat */
     int start_col = column;
     /* consumam tot; resetam col daca contine \\n */
     column = 1;
@@ -65,64 +78,107 @@ void printErrors();
     addToFIP("STRING", STRING_CODE, yylineno, start_col, string(yytext, yyleng));
 }
 
-/* Operatori multi-caracter */
+
 >>|<<|==|!= {
+    /* Operator */
     int start_col = column;
+    string lex(yytext, yyleng);
     column += yyleng;
-    addToFIP("OPERATOR", OPERATOR_CODE, yylineno, start_col);
+    addToFIP("OPERATOR", OPERATOR_CODE, yylineno, start_col, lex);
 }
 
-/* Operatori single-caracter */
+
 [+\-=\*/%><] {
+    /* Operator */
     int start_col = column;
+    string lex(yytext, yyleng);
     column += yyleng;
-    addToFIP("OPERATOR", OPERATOR_CODE, yylineno, start_col);
+    addToFIP("OPERATOR", OPERATOR_CODE, yylineno, start_col, lex);
 }
 
-/* Separatori */
+
 [,;(){}.] {
+    /* Separatoare */
     int start_col = column;
+    string lex(yytext, yyleng);
     column += yyleng;
-    addToFIP("SEPARATOR", SEPARATOR_CODE, yylineno, start_col);
+    addToFIP("SEPARATOR", SEPARATOR_CODE, yylineno, start_col, lex);
 }
 
-/* Hash (preprocesor) */
+
 # {
+    /* Hash */
     int start_col = column;
+    string lex(yytext, yyleng);
     column += yyleng;
-    addToFIP("HASH", HASH_CODE, yylineno, start_col);
+    addToFIP("HASH", HASH_CODE, yylineno, start_col, lex);
 }
 
-/* Constante intregi (zecimale) */
-[0-9]+ {
+
+[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFlL]? {
+    /* Constant Real */
+    int start_col = column;
+    string lex(yytext, yyleng);
+    column += yyleng;
+    addToFIP("CONSTANT_REAL", CONSTANT_CODE, yylineno, start_col, lex);
+}
+
+0[xX][0-9a-fA-F]+([uUlL]{1,3})? {
+    /* Constant Int (Hex) */
     int start_col = column;
     string lex(yytext, yyleng);
     column += yyleng;
     addToFIP("CONSTANT_INT", CONSTANT_CODE, yylineno, start_col, lex);
 }
 
-/* Identificatori si cuvinte-cheie (case-insensitive pentru keywords) */
+0[bB][01]+([uUlL]{1,3})? {
+    /* Constant Int (Binary) */
+    int start_col = column;
+    string lex(yytext, yyleng);
+    column += yyleng;
+    addToFIP("CONSTANT_INT", CONSTANT_CODE, yylineno, start_col, lex);
+}
+
+0[0-7]+([uUlL]{1,3})? {
+    /* Constant Int (Octal) */
+    int start_col = column;
+    string lex(yytext, yyleng);
+    column += yyleng;
+    addToFIP("CONSTANT_INT", CONSTANT_CODE, yylineno, start_col, lex);
+}
+
+[0-9]+([uUlL]{1,3})? {
+    /* Constant Int (Decimal) */
+    int start_col = column;
+    string lex(yytext, yyleng);
+    column += yyleng;
+    addToFIP("CONSTANT_INT", CONSTANT_CODE, yylineno, start_col, lex);
+}
+
+
 [a-zA-Z_][a-zA-Z0-9_]* {
+    /* Identifier sau Keyword */
     int start_col = column;
     string lex(yytext, yyleng);
     column += yyleng;
     string lower = lex;
     transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch){ return (char)tolower(ch); });
     if (KEYWORDS.count(lower)) {
-        addToFIP("KEYWORD", KEYWORD_CODE, yylineno, start_col);
+        addToFIP("KEYWORD", KEYWORD_CODE, yylineno, start_col, lower);
     } else {
         addToFIP("IDENTIFIER", IDENTIFIER_CODE, yylineno, start_col, lex);
     }
 }
 
-/* Caracter necunoscut */
+
 . {
+    /* Caracter necunoscut */
     int start_col = column;
     column += yyleng;
     addError(string("Caracter necunoscut '") + string(yytext, yyleng) + "'", yylineno, start_col);
 }
 
-/* User code: main */
+
 %%
 
 void addToFIP(const string& tokenType, int code, int line, int col, const string& lexeme) {
@@ -132,11 +188,19 @@ void addToFIP(const string& tokenType, int code, int line, int col, const string
     entry.line = line;
     entry.col = col;
     entry.symbolTableIndex = -1;
-    if (tokenType == "IDENTIFIER" || tokenType == "CONSTANT_INT") {
+    if (tokenType == "IDENTIFIER") {
+        string lowerLex = lexeme;
+        transform(lowerLex.begin(), lowerLex.end(), lowerLex.begin(), [](unsigned char ch){ return (char)tolower(ch); });
+        if (!KEYWORDS.count(lowerLex)) {
+            int idx = symbolTable.addSymbol(lexeme);
+            entry.symbolTableIndex = idx;
+        }
+    } else if (tokenType == "CONSTANT_INT") {
         int idx = symbolTable.addSymbol(lexeme);
         entry.symbolTableIndex = idx;
     }
     fip.push_back(entry);
+    updateIfFSM(tokenType, lexeme, line, col);
 }
 
 void addError(const string& msg, int line, int col) {
@@ -205,6 +269,64 @@ void printErrors() {
     }
 }
 
+static int if_state = 0;
+static int if_start_line = 0;
+static int if_start_col = 0;
+static int if_ok_count = 0;
+
+void updateIfFSM(const string& tokenType, const string& lexeme, int line, int col) {
+    switch (if_state) {
+        case 0:
+            if (tokenType == "KEYWORD" && lexeme == "if") {
+                if_state = 1;
+                if_start_line = line;
+                if_start_col = col;
+            }
+            break;
+        case 1:
+            if (tokenType == "SEPARATOR" && lexeme == "(") {
+                if_state = 2;
+            } else {
+                addError("Se astepta '(' dupa 'if'", line, col);
+                if_state = 0;
+            }
+            break;
+        case 2:
+            if (tokenType == "IDENTIFIER") {
+                if_state = 3;
+            } else {
+                addError("Se astepta IDENTIFIER in 'if (...)'", line, col);
+                if_state = 0;
+            }
+            break;
+        case 3:
+            if (tokenType == "SEPARATOR" && lexeme == ")") {
+                if_state = 4;
+            } else {
+                addError("Se astepta ')' dupa 'if (ID'", line, col);
+                if_state = 0;
+            }
+            break;
+        case 4:
+            if (tokenType == "KEYWORD" && lexeme == "then") {
+                if_state = 5;
+            } else {
+                addError("Se astepta 'then' dupa 'if (ID)'", line, col);
+                if_state = 0;
+            }
+            break;
+        case 5:
+            if (tokenType == "KEYWORD" && lexeme == "endif") {
+                if_ok_count++;
+                if_state = 0;
+            }
+            break;
+        case 6:
+            if_state = 0;
+            break;
+    }
+}
+
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
@@ -220,6 +342,7 @@ int main() {
     }
     yyin = f;
 
+    /* Lexer - generare FIP */
     yylex();
 
     fclose(f);

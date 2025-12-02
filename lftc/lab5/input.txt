@@ -1,0 +1,17 @@
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int a;
+    double b = 2.71828;
+    char c;
+    a = 5;
+    if (a) then
+    a = a + 1;
+    { float t = 3.14; }
+    endif
+    while (a) a = a - 1;
+    return a;
+}
+

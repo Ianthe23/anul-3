@@ -1,0 +1,12 @@
+Automat:
+- initialState: Tuple<string, string> // valoare, tip E {INITIAL, FINAL, NORMAL}
+- finalStates: Set<Tuple<string, string>>
+- transitions: Set<Tranzitie>
+- allStates: Set<Tuple<string, string>>
+- alphabet: List<string>
+
+
+Tranzitie:
+- source: Tuple<string, string>
+- symbol: string
+- destination: Tuple<string, string>
